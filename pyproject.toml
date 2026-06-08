@@ -1,0 +1,80 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling", "hatch-vcs"]
+
+[project]
+description = "An example python project for use as a template"
+dynamic = ["version"]
+name = "example_project"
+readme = "README.md"
+requires-python = ">=3.6"
+# production dependencies
+dependencies = ["sampleproject~=3.0.0"]
+
+# Optional dependency lists. Installed using [].
+# For example, pip install -e .[dev], or pip install example_project[test]
+[project.optional-dependencies]
+dev = ["ruff", "pre-commit", "mypy"]
+test = ["pytest"]
+
+[project.scripts]
+# script_name = "my_package.module:function"
+example-project = "example_project.entrypoint:main"
+
+# Hatch Configuration
+[tool.hatch.build]
+# ensure editable installs work with the src/ project structure
+dev-mode-dirs = [
+  "src/",
+]
+# Uncomment the following line if using a native namespace package,
+# replacing 'example_namespace' with the namespace you created
+# include = ["src/example_namespace"]
+[tool.hatch.metadata]
+# set up to allow for installs from local packages, like a submodule in libraries/
+allow-direct-references = true
+# Use Git Tags to generate versions
+[tool.hatch.version]
+source = "vcs"
+[tool.hatch.build.hooks.vcs]
+version-file = "src/example_project/_version.py"
+# End Hatch Configuration
+
+# Pytest Configuration
+[tool.pytest.ini_options]
+# ensure pytest can locate the project's source code
+pythonpath = [
+  "src",
+]
+# End Pytest Configuration
+
+# Ruff Configuration
+[tool.ruff]
+# avoid automatically removing unused imports in __init__.py files
+ignore-init-module-imports = true
+# enable and enforce pydocstyle checks, default ruff checks and isort
+lint.select = [
+  # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
+  # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+  # McCabe complexity (`C901`) by default.
+  "E4",
+  "E7",
+  "E9",
+  "E501",
+  "F",
+  "D", # pydocstyle
+  "I", # isort
+]
+pydocstyle.convention = "numpy"
+# don't require docstrings in public modules
+lint.ignore = [
+  "D100",
+  "D104",
+]
+# End Ruff Configuration
+
+# Mypy Configuration
+[tool.mypy]
+strict = true
+pretty = true
+# End Mypy Configuration
