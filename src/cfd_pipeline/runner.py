@@ -3,24 +3,36 @@
 import argparse
 import os
 import subprocess
-import random
+
 
 def runner():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dir", default="./cases", help="Directory to use for inputs and outputs")
-    parser.add_argument("--sweep", type=str, help="Path to input.dat file for sweep of input cases")
-    parser.add_argument("--single", action="store_true", help="Generate and run a single input file")
+    parser.add_argument(
+        "--dir", default="./cases", help="Directory to use for inputs and outputs"
+    )
+    parser.add_argument(
+        "--sweep", type=str, help="Path to input.dat file for sweep of input cases"
+    )
+    parser.add_argument(
+        "--single", action="store_true", help="Generate and run a single input file"
+    )
     parser.add_argument("--pressure", type=int, help="Pressure value for single input")
-    parser.add_argument("--temperature", type=float, help="Temperature value for single input")
+    parser.add_argument(
+        "--temperature", type=float, help="Temperature value for single input"
+    )
     parser.add_argument("--mach", type=float, help="Mach value for single input")
-    parser.add_argument("--postprocess", help="Postprocess a single result file by name")
+    parser.add_argument(
+        "--postprocess", help="Postprocess a single result file by name"
+    )
     args = parser.parse_args()
-    
+
     os.makedirs(args.dir, exist_ok=True)
 
     if args.single:
         if args.pressure is None or args.temperature is None or args.mach is None:
-            print("[runner] ERROR: --pressure, --temperature, and --mach must be specified for single run")
+            print(
+                "[runner] ERROR: --pressure, --temperature, and --mach must be specified for single run"
+            )
             return
         pressure = args.pressure
         temperature = args.temperature
@@ -37,10 +49,14 @@ def runner():
 
         try:
             print(f"[runner] Running case {case_name}...")
-            result = subprocess.run(["./bin/jet3D", input_path, output_path], capture_output=True, text=True)
+            result = subprocess.run(
+                ["./bin/jet3D", input_path, output_path], capture_output=True, text=True
+            )
             print(result.stdout)
             if result.returncode != 0:
-                print(f"[runner] ERROR running case {case_name}: {result.stderr.strip()}")
+                print(
+                    f"[runner] ERROR running case {case_name}: {result.stderr.strip()}"
+                )
             else:
                 print(f"[runner] SUCCESS input: {input_path}, output:{output_path}")
         except Exception as e:
@@ -70,12 +86,21 @@ def runner():
 
                     try:
                         print(f"[runner] Running case {case_name}...")
-                        result = subprocess.run(["./bin/jet3D", input_path, output_path], capture_output=True, text=True, timeout=300)
+                        result = subprocess.run(
+                            ["./bin/jet3D", input_path, output_path],
+                            capture_output=True,
+                            text=True,
+                            timeout=300,
+                        )
                         print(result.stdout)
                         if result.returncode != 0:
-                            print(f"[runner] ERROR running case {case_name}: {result.stderr.strip()}")
+                            print(
+                                f"[runner] ERROR running case {case_name}: {result.stderr.strip()}"
+                            )
                         else:
-                            print(f"[runner] SUCCESS input: {input_path}, output:{output_path}")
+                            print(
+                                f"[runner] SUCCESS input: {input_path}, output:{output_path}"
+                            )
                     except subprocess.TimeoutExpired:
                         print(f"[runner] TIMEOUT on case {case_name}")
                     except Exception as e:
@@ -108,11 +133,16 @@ def runner():
                                 found = True
                                 break
                 if not found:
-                    print(f"[postprocess] No results found in {output_file} — file may be truncated or invalid.")
+                    print(
+                        f"[postprocess] No results found in {output_file} — file may be truncated or invalid."
+                    )
         except Exception as e:
             print(f"[postprocess] Failed to read {output_file}: {e}")
     else:
-        print("[runner] No action specified. Use --single, --sweep INPUT.DAT, or --postprocess FILE")
+        print(
+            "[runner] No action specified. Use --single, --sweep INPUT.DAT, or --postprocess FILE"
+        )
+
 
 if __name__ == "__main__":
     runner()
