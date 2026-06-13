@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-jet3d-runner = "cfd_pipeline.entrypoint:main"
+jet3d-runner = "cfd_pipeline.cli:main"
 
 # Optional dependency lists. Installed using [].
 # For example, pip install -e .[dev], or pip install example_project[test]

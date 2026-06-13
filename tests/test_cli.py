@@ -3,8 +3,9 @@
 from pathlib import Path
 from typing import List, Tuple
 
-import cfd_pipeline.cli as cli
 import pytest
+
+import cfd_pipeline.cli as cli
 from cfd_pipeline.models import SimulationCase
 
 

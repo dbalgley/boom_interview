@@ -3,8 +3,9 @@
 from pathlib import Path
 from typing import List
 
-import cfd_pipeline.orchestrator as orchestrator
 import pytest
+
+import cfd_pipeline.orchestrator as orchestrator
 from cfd_pipeline.models import SimulationCase, SimulationResult, SimulationStatus
 
 
