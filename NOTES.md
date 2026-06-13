@@ -47,23 +47,6 @@ ADD:
 - dockerfile
 - github actions
 
-###
-cli.py # argparse only models.py # SimulationCase, SimulationResult, ForcesMoments case_io.py # write input files, read sweep files solver.py # calls ./bin/jet3D postprocess.py # parses result logs runner.py # orchestration glue
-
-Working notes:
-- runner.py has: cli parsing, case generation, solver execution, sweep parsing, and postprocessing all mixed
-- single and sweep execution duplicate most of the same logic
-- error handling is too broad
-- case naming is 9inconsistent (single "t288.15", sweep "t288")
-- doesn't produce *structured* status
--I preserved the original command-line interface while moving the implementation into a package structure to improve maintainability and testability.
-- Went with python 3.10, but will use a dockerfile for reproducable runtime. I would confirm engineering python constraints before making such a change however.
-- dataclass instead of pydantic because we're not putting in an api endpoint (yet), or cloud queue.
-- I intentionally kept case parameter validation limited to parsing and type conversion rather than imposing physics-domain constraints. In a real CFD workflow, valid ranges should come from the engineering team or solver documentation rather than being inferred in the orchestration layer.
-- replaced ad hoc print statements with logging framework, allowing for verbosity control, redirection, and batch/monitoring
-- I forward solver stdout/stderr through dedicated loggers without rewriting the solver’s messages. This preserves the black-box solver output exactly while still making stream origin visible to the orchestration layer.
-- audit trail or list of runs? append only exe manifest.
-- I standardized case naming between single and sweep runs. The original script used full temperature precision for single cases but truncated temperature in sweep mode. I chose the full value in both modes to avoid filename collisions between cases such as 288.1 and 288.9. I did not alter the simulation inputs.
 
 ### QUESTIONS ID ASK THE DEV
 - Is the int on temperature intentional in casename?

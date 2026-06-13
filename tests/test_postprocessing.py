@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from cfd_pipeline.models import ForcesMoments
 from cfd_pipeline.postprocess import (
     InvalidResultFileError,
@@ -28,7 +29,7 @@ def test_parse_forces_moments_line_returns_values() -> None:
 
 
 def test_parse_forces_moments_line_rejects_non_result_line() -> None:
-    """Test that parse_forces_moments_line raises an error if the line does not contain result data."""
+    """Raise an error if the line does not contain result data."""
     with pytest.raises(
         InvalidResultFileError,
         match="line does not contain final forces and moments",
@@ -37,7 +38,7 @@ def test_parse_forces_moments_line_rejects_non_result_line() -> None:
 
 
 def test_parse_forces_moments_line_rejects_wrong_value_count() -> None:
-    """Test that parse_forces_moments_line raises an error if the result line does not contain exactly 6 values."""
+    """Raise an error if the result line does not contain exactly 6 values."""
     line = "Final Forces and Moments (N, Nm): [1.0, 2.0, 3.0]"
 
     with pytest.raises(InvalidResultFileError, match="expected 6 result values"):
@@ -45,7 +46,7 @@ def test_parse_forces_moments_line_rejects_wrong_value_count() -> None:
 
 
 def test_parse_forces_moments_line_rejects_non_numeric_values() -> None:
-    """Test that parse_forces_moments_line raises an error if the result values cannot be parsed as floats."""
+    """Raise an error if the result values cannot be parsed as floats."""
     line = "Final Forces and Moments (N, Nm): [1.0, 2.0, nope, 4.0, 5.0, 6.0]"
 
     with pytest.raises(InvalidResultFileError, match="result values must be numeric"):
@@ -53,7 +54,7 @@ def test_parse_forces_moments_line_rejects_non_numeric_values() -> None:
 
 
 def test_parse_result_file_returns_values_from_complete_output(tmp_path: Path) -> None:
-    """Test that parse_result_file correctly parses a valid result line from a complete output file."""
+    """Correctly parse a valid result line from a complete output file."""
     output_file = tmp_path / "result.log"
     output_file.write_text(
         (
