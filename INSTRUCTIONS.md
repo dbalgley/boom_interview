@@ -1,6 +1,6 @@
 # jet3D Take-Home Challenge
 
-### ⏱️ ***We expect this to be a 3-4 hour exercise.*** 
+### ⏱️ ***We expect this to be a 3-4 hour exercise.***
 You won’t be able to solve everything in that amount of time, and that’s okay — prioritize what you believe matters most. We want to see your judgment, clarity, and design thinking in action.
 
 ## 1. Overview and Expectations
@@ -50,11 +50,11 @@ They’ve asked for your help to make the workflow faster, more robust, and easi
 
 ## 3. How to Run the Current Tool
 
-The engineer currently uses a command-line Python script to interact with the jet3D solver. The script supports a few basic modes described below: 
+The engineer currently uses a command-line Python script to interact with the jet3D solver. The script supports a few basic modes described below:
 
-**NOTE:** *to run these commands open the terminal by either clicking “All Tools”, then select “Shell” on the left sidebar or with:* 
+**NOTE:** *to run these commands open the terminal by either clicking “All Tools”, then select “Shell” on the left sidebar or with:*
 
-`ctrl + backtick` 
+`ctrl + backtick`
 
 Copy and paste this command in terminal to run a single simulation:
 

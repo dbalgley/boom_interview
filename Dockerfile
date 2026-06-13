@@ -1,4 +1,4 @@
-FROM python:v3.12 as base
+FROM python:3.11-slim AS base
 
 # Create non-root user to run the app. Kubesec suggest a UID >10000 to avoid
 # colliding with system users. USER and UID are args so it's more convenient
@@ -6,40 +6,55 @@ FROM python:v3.12 as base
 ARG UID=13337
 ARG USER=runner
 USER root
-RUN useradd --uid ${UID} -Um ${USER}
-USER ${UID}:${UID}
 
-# Setup venv variables
+RUN useradd --uid "${UID}" --create-home --user-group "${USER}"
+
+USER "${UID}:${UID}"
+
 ENV VIRTUAL_ENV=/home/${USER}/venv
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
 
-# Use this stage to build the dependency venv. Sometimes this requires special devel
-# packages (gcc, python-devel, etc.) so install those here. They will not get copied to
-# the final image.
-FROM base as builder
+FROM base AS builder
 
-# Upgrade Python build/install tooling
-RUN pip install --upgrade pip setuptools
+USER root
 
-# Setup the virutalenv
-RUN python3 -m venv $VIRTUAL_ENV
+RUN python -m venv "${VIRTUAL_ENV}" \
+    && "${VIRTUAL_ENV}/bin/python" -m pip install --upgrade pip setuptools wheel
 
-# Pre install dependencies for layer optimization
+USER "${UID}:${UID}"
+
 WORKDIR /home/${USER}
+
 COPY --chown=${USER}:${USER} pyproject.toml pyproject.toml
-RUN python -c 'import tomllib; f = open("pyproject.toml", "rb"); c = tomllib.load(f); f.close(); print("\n".join(c["project"]["dependencies"]))' | pip install -r /dev/stdin
+
+# Runtime dependencies only. This project currently has none, but this keeps the
+# template ready if dependencies are added later.
+RUN python -c 'import tomllib; f = open("pyproject.toml", "rb"); c = tomllib.load(f); f.close(); print("\n".join(c["project"]["dependencies"]))' \
+    | pip install --no-cache-dir -r /dev/stdin
 
 
-# This is the final runtime image. It only includes packages needed to run the app
-FROM base as final
+FROM base AS final
 
-# Copy in the final venv
+WORKDIR /app
+
+USER root
+
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
-# Install the app wheel. Using mount prevents an extra copy of the wheel living in the
-# docker image layers. This also doesn't cache well, so having it last is ideal.
-RUN --mount=type=bind,target=/data/dist,source=dist/ \
-   pip install --no-cache-dir /data/dist/example_project*.whl
+COPY dist/*.whl /tmp/
+RUN pip install --no-cache-dir /tmp/*.whl \
+    && rm -f /tmp/*.whl \
+    && chown -R "${USER}:${USER}" "${VIRTUAL_ENV}"
 
-ENTRYPOINT [ "example-project" ]
+COPY --chown=${USER}:${USER} bin ./bin
+COPY --chown=${USER}:${USER} input.dat ./input.dat
+COPY --chown=${USER}:${USER} src/runner.py ./src/runner.py
+
+RUN chmod +x ./bin/jet3D ./src/runner.py \
+    && mkdir -p /app/cases \
+    && chown -R "${USER}:${USER}" /app
+
+USER "${UID}:${UID}"
+
+ENTRYPOINT ["./src/runner.py"]
