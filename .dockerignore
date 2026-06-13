@@ -1,4 +1,24 @@
-*
+.git
+.github
+.venv
+venv
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+cases/
+tests/
+.coverage
+coverage.xml
+htmlcov/
+*.rar
+*.zip
 
+# Keep CI-built wheel artifacts available to Docker.
+dist/
 !dist/
-!pyproject.toml
+!dist/*.whl

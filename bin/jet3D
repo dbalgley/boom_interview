@@ -187,8 +187,9 @@ import time
 import random
 import sys
 import os
+from typing import Any
 
-def stealth_op(input_path, output_path):
+def stealth_op(input_path: str, output_path: str) -> dict[str, Any]:
     time.sleep(3)  # Simulate slow running process
 
     if not os.path.isfile(input_path):
