@@ -10,7 +10,7 @@ from cfd_pipeline.models import SimulationCase
 
 
 def test_main_returns_error_when_no_action(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that main returns an error exit code when no action flags are provided."""
+    """Return an error exit code when no action flags are provided."""
     monkeypatch.setattr("sys.argv", ["runner.py"])
 
     exit_code = cli.main()
@@ -21,7 +21,7 @@ def test_main_returns_error_when_no_action(monkeypatch: pytest.MonkeyPatch) -> N
 def test_main_returns_error_when_single_missing_required_args(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test that main returns an error exit code when --single is specified but required arguments are missing."""
+    """Return an error exit code when required arguments are missing."""
     monkeypatch.setattr(
         "sys.argv",
         ["runner.py", "--single", "--pressure", "101325", "--temperature", "288.15"],
@@ -35,7 +35,7 @@ def test_main_returns_error_when_single_missing_required_args(
 def test_main_routes_single_run(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Test that main routes to run_single with the correct arguments when --single is specified with required parameters."""
+    """Test correct arguments when --single is specified with required parameters."""
     calls: List[Tuple[int, float, float, Path]] = []
 
     def fake_run_single(
@@ -71,7 +71,7 @@ def test_main_routes_single_run(
 
 
 def test_main_routes_sweep(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Test that main routes to run_sweep with the correct arguments when --sweep is specified."""
+    """Test correct arguments when --sweep is specified."""
     calls: List[Tuple[Path, Path]] = []
 
     def fake_run_sweep(*, sweep_path: Path, case_dir: Path, solver_path: Path) -> int:
@@ -95,7 +95,7 @@ def test_main_routes_postprocess(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Test that main routes to postprocess_result with the correct arguments when --postprocess is specified."""
+    """Test correct arguments when --postprocess is specified."""
     calls: List[Path] = []
 
     def fake_postprocess_result(output_file: Path) -> int:

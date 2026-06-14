@@ -1,4 +1,5 @@
 """Tests for jet3D solver execution wrapper."""
+
 from __future__ import annotations
 
 import subprocess
@@ -10,7 +11,7 @@ from cfd_pipeline.solver import run_solver
 
 
 def test_run_solver_returns_success_result(monkeypatch: Any, tmp_path: Path) -> None:
-    """Test that run_solver returns a SUCCESS SimulationResult when subprocess.run completes with a zero exit code."""
+    """Returns a SUCCESS when subprocess.run completes with a zero exit code."""
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
     input_path = tmp_path / "input.txt"
     output_path = tmp_path / "output.log"
@@ -46,7 +47,7 @@ def test_run_solver_returns_failed_result_for_nonzero_exit(
     monkeypatch: Any,
     tmp_path: Path,
 ) -> None:
-    """Test that a non-zero exit code from the solver is captured as a failure result."""
+    """Return a failed result when subprocess.run returns a non-zero exit code."""
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
     input_path = tmp_path / "input.txt"
     output_path = tmp_path / "output.log"
@@ -75,7 +76,7 @@ def test_run_solver_returns_failed_result_for_nonzero_exit(
 
 
 def test_run_solver_returns_timeout_result(monkeypatch: Any, tmp_path: Path) -> None:
-    """Test that run_solver returns a timeout result when subprocess.run raises TimeoutExpired."""
+    """Return a timeout result when subprocess.run raises TimeoutExpired."""
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
     input_path = tmp_path / "input.txt"
     output_path = tmp_path / "output.log"
@@ -108,7 +109,7 @@ def test_run_solver_returns_failed_result_for_os_error(
     monkeypatch: Any,
     tmp_path: Path,
 ) -> None:
-    """Test that run_solver returns a FAILED SimulationResult when subprocess.run raises an OSError (e.g. if the solver executable is missing or not executable)."""
+    """Return FAILED when subprocess.run raises an OSError."""
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
     input_path = tmp_path / "input.txt"
     output_path = tmp_path / "output.log"
