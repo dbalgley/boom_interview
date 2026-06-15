@@ -5,6 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Union
 
+DEFAULT_SOLVER_TIMEOUT_SECONDS = 60
+
 
 @dataclass(frozen=True)
 class SimulationCase:

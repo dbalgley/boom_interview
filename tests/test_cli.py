@@ -45,10 +45,12 @@ def test_main_routes_single_run(
         case: SimulationCase,
         case_dir: Path,
         solver_path: Path,
+        timeout_seconds: int,
     ) -> SimulationResult:
         captured["case"] = case
         captured["case_dir"] = case_dir
         captured["solver_path"] = solver_path
+        captured["timeout_seconds"] = timeout_seconds
 
         return SimulationResult(
             case=case,
@@ -75,10 +77,14 @@ def test_main_routes_single_run(
             "288.15",
             "--mach",
             "0.85",
+            "--timeout",
+            "60",
         ],
     )
 
     assert cli.main() == 0
+
+    assert captured["timeout_seconds"] == 60
 
     assert captured["case"] == SimulationCase(
         pressure=101325,
@@ -97,6 +103,7 @@ def test_main_routes_sweep(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
         sweep_path: Path,
         case_dir: Path,
         solver_path: Path,
+        timeout_seconds: int,
         show_progress: bool = False,
     ) -> int:
         """Fake run_sweep that captures the arguments it was called with."""

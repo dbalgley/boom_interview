@@ -22,6 +22,7 @@ def test_run_single_writes_input_and_returns_success(
         input_path: Path,
         output_path: Path,
         solver_path: Path,
+        timeout_seconds: int,
     ) -> SimulationResult:
         output_path.write_text(
             "CFD Solver Output Log\n"
@@ -47,6 +48,7 @@ def test_run_single_writes_input_and_returns_success(
         case=case,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
+        timeout_seconds=60,
     )
 
     assert result.status == SimulationStatus.SUCCESS
@@ -70,6 +72,7 @@ def test_run_single_returns_failure_for_solver_error(
         input_path: Path,
         output_path: Path,
         solver_path: Path,
+        timeout_seconds: int,
     ) -> SimulationResult:
         return SimulationResult(
             case=case,
@@ -87,6 +90,7 @@ def test_run_single_returns_failure_for_solver_error(
         case=case,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
+        timeout_seconds=60,
     )
 
     assert result.status == SimulationStatus.FAILED
@@ -110,6 +114,7 @@ def test_run_single_returns_failure_for_timeout(
         input_path: Path,
         output_path: Path,
         solver_path: Path,
+        timeout_seconds: int,
     ) -> SimulationResult:
         return SimulationResult(
             case=case,
@@ -127,6 +132,7 @@ def test_run_single_returns_failure_for_timeout(
         case=case,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
+        timeout_seconds=60,
     )
 
     assert result.status == SimulationStatus.TIMEOUT
@@ -149,6 +155,7 @@ def test_run_single_returns_failure_for_invalid_solver_output(
         input_path: Path,
         output_path: Path,
         solver_path: Path,
+        timeout_seconds: int,
     ) -> SimulationResult:
         output_path.write_text(
             "CFD Solver Output Log\n"
@@ -173,6 +180,7 @@ def test_run_single_returns_failure_for_invalid_solver_output(
         case=case,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
+        timeout_seconds=60,
     )
 
     assert result.status == SimulationStatus.INVALID_OUTPUT
@@ -199,6 +207,7 @@ def test_run_sweep_continues_after_failed_case(
         case: SimulationCase,
         case_dir: Path,
         solver_path: Path,
+        timeout_seconds: int,
     ) -> SimulationResult:
         calls.append(case)
 
@@ -223,6 +232,7 @@ def test_run_sweep_continues_after_failed_case(
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
         show_progress=False,
+        timeout_seconds=60,
     )
 
     assert exit_code == 1
@@ -235,6 +245,7 @@ def test_run_sweep_returns_failure_for_missing_sweep_file(tmp_path: Path) -> Non
         sweep_path=tmp_path / "missing.dat",
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
+        timeout_seconds=60,
     )
 
     assert exit_code == 1

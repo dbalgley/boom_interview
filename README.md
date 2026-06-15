@@ -61,12 +61,7 @@ Important files:
 
 ## Local setup
 
-Create and activate a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-```
+Create and activate a virtual environment.
 
 On Windows PowerShell:
 
@@ -75,22 +70,45 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-Install the package in editable mode with development dependencies:
+On Linux, macOS, or WSL:
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install the package in editable mode with development dependencies:
+
+```powershell
 python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-Make sure the original executable entrypoints are executable:
+On Linux, macOS, or WSL, ensure the original executable entrypoints are executable:
 
 ```bash
 chmod +x src/runner.py bin/jet3D
 ```
 
+Windows users running through `python .\src\runner.py` or the installed `cfd-pipeline` command do not need the `chmod` step.
+
 ## Running locally
 
 ### Show CLI help
+
+On Windows PowerShell, prefer the installed command:
+
+```powershell
+cfd-pipeline --help
+```
+
+Or run the compatibility entrypoint through Python:
+
+```powershell
+python .\src\runner.py --help
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
 ./src/runner.py --help
@@ -99,11 +117,26 @@ chmod +x src/runner.py bin/jet3D
 If installed, the package script can also be used:
 
 ```bash
-jet3d-runner --help
+cfd-pipeline --help
 ```
-> Note: The package script is installed via the above `python -m pip install -e ".[dev]" command`
+
+> Note: The package script is installed via the above `python -m pip install -e ".[dev]"` command.
 
 ### Run a single simulation
+
+On Windows PowerShell:
+
+```powershell
+cfd-pipeline --single --pressure 101325 --temperature 288.15 --mach 0.85
+```
+
+Or:
+
+```powershell
+python .\src\runner.py --single --pressure 101325 --temperature 288.15 --mach 0.85
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
 ./src/runner.py --single --pressure 101325 --temperature 288.15 --mach 0.85
@@ -112,7 +145,7 @@ jet3d-runner --help
 Equivalent installed command:
 
 ```bash
-jet3d-runner --single --pressure 101325 --temperature 288.15 --mach 0.85
+cfd-pipeline --single --pressure 101325 --temperature 288.15 --mach 0.85
 ```
 
 By default, outputs are written under `cases/`.
@@ -126,6 +159,20 @@ cases/result_case_m0.85_p101325_t288.15.log
 
 ### Run a sweep
 
+On Windows PowerShell:
+
+```powershell
+cfd-pipeline --sweep .\input.dat
+```
+
+Or:
+
+```powershell
+python .\src\runner.py --sweep .\input.dat
+```
+
+On Linux, macOS, or WSL:
+
 ```bash
 ./src/runner.py --sweep ./input.dat
 ```
@@ -133,7 +180,7 @@ cases/result_case_m0.85_p101325_t288.15.log
 Equivalent installed command:
 
 ```bash
-jet3d-runner --sweep ./input.dat
+cfd-pipeline --sweep ./input.dat
 ```
 
 The sweep file is expected to contain rows with:
@@ -146,22 +193,52 @@ Malformed rows are skipped and logged.
 
 ### Progress display
 
-Sweep runs show a progress bar when running in an interactive terminal:
+Sweep runs show a progress bar when running in an interactive terminal.
+
+On Windows PowerShell:
+
+```powershell
+cfd-pipeline --sweep .\input.dat
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
 ./src/runner.py --sweep ./input.dat
+```
+
+To disable the progress display:
+
+```powershell
+cfd-pipeline --sweep .\input.dat --no-progress
+```
 
 ### Post-process a result
 
-```bash
-./src/runner.py --postprocess result_case_m0.85_p101325_t288.15.log
+On Windows PowerShell:
+
+```powershell
+cfd-pipeline --postprocess result_case_m0.85_p101325_t288.15.log
+```
+
+Or:
+
+```powershell
+python .\src\runner.py --postprocess result_case_m0.85_p101325_t288.15.log
 ```
 
 The postprocess command looks for the file under the configured cases directory.
 
-Equivalent explicit form:
+Equivalent explicit form on Windows PowerShell:
+
+```powershell
+cfd-pipeline --dir .\cases --postprocess result_case_m0.85_p101325_t288.15.log
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
+./src/runner.py --postprocess result_case_m0.85_p101325_t288.15.log
 ./src/runner.py --dir ./cases --postprocess result_case_m0.85_p101325_t288.15.log
 ```
 
@@ -169,7 +246,28 @@ Equivalent explicit form:
 
 The included `bin/jet3D` is provided for the challenge and for reproducible local testing. The workflow does not require that exact path.
 
-Use `--solver` to point at a different solver executable:
+Use `--solver` to point at a different solver executable.
+
+On Windows PowerShell:
+
+```powershell
+cfd-pipeline `
+  --single `
+  --pressure 101325 `
+  --temperature 288.15 `
+  --mach 0.85 `
+  --solver C:\path\to\another\jet3D.exe
+```
+
+For a sweep on Windows PowerShell:
+
+```powershell
+cfd-pipeline `
+  --sweep .\input.dat `
+  --solver C:\path\to\another\jet3D.exe
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
 ./src/runner.py \
@@ -196,67 +294,129 @@ solver_executable input_file output_file
 
 The workflow expects the solver to write a result file containing a `Final Forces and Moments` line when successful.
 
+> Note: The provided `bin/jet3D` executable may not run natively on Windows depending on how it was built. If it does not execute from PowerShell, use the Docker image or run the project from WSL.
+
 ## Running with Docker
 
 The Docker image packages the Python workflow and the provided `bin/jet3D` executable so the project can be run without setting up a local Python environment.
 
 Build the image locally:
 
+```powershell
+python -m pip install --upgrade build
+python -m build
+docker build -t cfd-pipeline .
+mkdir cases
+```
+
+On Linux, macOS, or WSL:
+
 ```bash
 python -m pip install --upgrade build
 python -m build
-docker build -t jet3d-workflow .
+docker build -t cfd-pipeline .
 mkdir -p cases
-sudo chown -R 13337:13337 cases
 ```
-> Note: It is important that the bind-mount directory `cases/` is writable by the non-root numeric user 13337, which is the user running in the container.
 
 Run help:
 
-```bash
-docker run --rm jet3d-workflow --help
+```powershell
+docker run --rm cfd-pipeline --help
 ```
 
-Run a single case:
+Run a single case on Windows PowerShell:
 
-```bash
-docker run --rm \
-  -v "$PWD/cases:/app/cases" \
-  jet3d-workflow \
+```powershell
+docker run --rm `
+  -v "${PWD}\cases:/app/cases" `
+  cfd-pipeline `
   --single --pressure 101325 --temperature 288.15 --mach 0.85
 ```
 
-Run a sweep:
+Run a sweep on Windows PowerShell:
 
-```bash
-docker run --rm \
-  -v "$PWD/cases:/app/cases" \
-  jet3d-workflow \
+```powershell
+docker run --rm `
+  -v "${PWD}\cases:/app/cases" `
+  cfd-pipeline `
   --sweep ./input.dat
 ```
 
-Post-process a result:
+Post-process a result on Windows PowerShell:
 
-```bash
-docker run --rm \
-  -v "$PWD/cases:/app/cases" \
-  jet3d-workflow \
+```powershell
+docker run --rm `
+  -v "${PWD}\cases:/app/cases" `
+  cfd-pipeline `
   --postprocess result_case_m0.85_p101325_t288.15.log
 ```
 
 The volume mount keeps generated case files and result logs on the host machine.
 
+On Linux, macOS, or WSL, pass the host user ID so generated files are owned by the current user:
+
+```bash
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -v "$PWD/cases:/app/cases" \
+  cfd-pipeline \
+  --single --pressure 101325 --temperature 288.15 --mach 0.85
+```
+
+For a sweep:
+
+```bash
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -v "$PWD/cases:/app/cases" \
+  cfd-pipeline \
+  --sweep ./input.dat
+```
+
+For post-processing:
+
+```bash
+docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  -v "$PWD/cases:/app/cases" \
+  cfd-pipeline \
+  --postprocess result_case_m0.85_p101325_t288.15.log
+```
+
 ## Using a different solver executable with Docker
 
 The Docker image includes the provided `bin/jet3D` for convenience, but a different solver can be mounted into the container and selected with `--solver`.
 
-Example:
+On Windows PowerShell:
+
+```powershell
+docker run --rm `
+  -v "${PWD}\cases:/app/cases" `
+  -v "${PWD}\my_solver\jet3D:/solver/jet3D:ro" `
+  cfd-pipeline `
+  --single --pressure 101325 --temperature 288.15 --mach 0.85 `
+  --solver /solver/jet3D
+```
+
+For a sweep on Windows PowerShell:
+
+```powershell
+docker run --rm `
+  -v "${PWD}\cases:/app/cases" `
+  -v "${PWD}\my_solver\jet3D:/solver/jet3D:ro" `
+  cfd-pipeline `
+  --sweep ./input.dat `
+  --solver /solver/jet3D
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
 docker run --rm \
+  --user "$(id -u):$(id -g)" \
   -v "$PWD/cases:/app/cases" \
   -v "$PWD/my_solver/jet3D:/solver/jet3D:ro" \
-  jet3d-workflow \
+  cfd-pipeline \
   --single --pressure 101325 --temperature 288.15 --mach 0.85 \
   --solver /solver/jet3D
 ```
@@ -265,9 +425,10 @@ For a sweep:
 
 ```bash
 docker run --rm \
+  --user "$(id -u):$(id -g)" \
   -v "$PWD/cases:/app/cases" \
   -v "$PWD/my_solver/jet3D:/solver/jet3D:ro" \
-  jet3d-workflow \
+  cfd-pipeline \
   --sweep ./input.dat \
   --solver /solver/jet3D
 ```
@@ -276,18 +437,32 @@ This allows the Python orchestration layer to remain stable while engineers test
 
 ## Docker Hub image
 
-An image has been published to Docker Hub automatically via GitHub CD, pull it with:
+An image has been published to Docker Hub automatically via GitHub CD. Pull it with:
 
-```bash
-docker pull davisb42/jet3d-workflow:latest
+```powershell
+docker pull davisb42/cfd-pipeline:latest
 ```
 
-Then run:
+Then run on Windows PowerShell:
+
+```powershell
+mkdir cases
+
+docker run --rm `
+  -v "${PWD}\cases:/app/cases" `
+  davisb42/cfd-pipeline:latest `
+  --single --pressure 101325 --temperature 288.15 --mach 0.85
+```
+
+On Linux, macOS, or WSL:
 
 ```bash
+mkdir -p cases
+
 docker run --rm \
+  --user "$(id -u):$(id -g)" \
   -v "$PWD/cases:/app/cases" \
-  <dockerhub-username>/jet3d-workflow:latest \
+  davisb42/cfd-pipeline:latest \
   --single --pressure 101325 --temperature 288.15 --mach 0.85
 ```
 
@@ -295,52 +470,54 @@ docker run --rm \
 
 Install development dependencies:
 
-```bash
+```powershell
 python -m pip install -e ".[dev]"
 ```
 
 Run the test suite:
 
-```bash
+```powershell
 pytest
 ```
 
 Run type checks:
 
-```bash
+```powershell
 mypy src tests
 ```
 
 Run formatting and lint checks:
 
-```bash
+```powershell
 ruff format --check .
 ruff check .
 ```
 
 Run pre-commit checks:
 
-```bash
+```powershell
 pre-commit run --all-files
 ```
 
 Build the Python package:
 
-```bash
+```powershell
 python -m build
 ```
 
 Build the Docker image:
 
-```bash
-docker build -t jet3d-workflow .
+```powershell
+docker build -t cfd-pipeline .
 ```
 
 Smoke-test the Docker image:
 
-```bash
-docker run --rm jet3d-workflow --help
+```powershell
+docker run --rm cfd-pipeline --help
 ```
+
+The same commands also work on Linux, macOS, and WSL.
 
 ## Contributing
 

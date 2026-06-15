@@ -1,7 +1,6 @@
 """Workflow orchestration for jet3D simulation runs."""
 
 import logging
-import sys
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Counter, Union
@@ -33,6 +32,7 @@ def run_single(
     case: SimulationCase,
     case_dir: Path,
     solver_path: Path,
+    timeout_seconds: int,
 ) -> SimulationResult:
     """Run one simulation case and return its workflow result."""
     input_path = case.input_path(case_dir)
@@ -47,6 +47,7 @@ def run_single(
         input_path=input_path,
         output_path=output_path,
         solver_path=solver_path,
+        timeout_seconds=timeout_seconds,
     )
 
     _log_process_streams(stdout=result.stdout, stderr=result.stderr)
@@ -98,6 +99,7 @@ def run_sweep(
     sweep_path: Path,
     case_dir: Path,
     solver_path: Path,
+    timeout_seconds: int,
     show_progress: bool = True,
 ) -> int:
     """Run a sweep of simulation cases."""
@@ -108,7 +110,7 @@ def run_sweep(
         return 1
 
     status_counts: Counter[SimulationStatus] = Counter()
-    progress_enabled = show_progress and sys.stderr.isatty()
+    progress_enabled = show_progress
 
     progress_bar = (
         tqdm(cases, desc="Running sweep", unit="case") if progress_enabled else None
@@ -123,6 +125,7 @@ def run_sweep(
                 case=case,
                 case_dir=case_dir,
                 solver_path=solver_path,
+                timeout_seconds=timeout_seconds,
             )
 
             status_counts[result.status] += 1

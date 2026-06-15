@@ -29,8 +29,7 @@ WORKDIR /home/${USER}
 
 COPY --chown=${USER}:${USER} pyproject.toml pyproject.toml
 
-# Runtime dependencies only. This project currently has none, but this keeps the
-# template ready if dependencies are added later.
+# Runtime dependencies
 RUN python -c 'import tomllib; f = open("pyproject.toml", "rb"); c = tomllib.load(f); f.close(); print("\n".join(c["project"]["dependencies"]))' \
     | pip install --no-cache-dir -r /dev/stdin
 
