@@ -338,8 +338,9 @@ Run a sweep on Windows PowerShell:
 ```powershell
 docker run --rm `
   -v "${PWD}\cases:/app/cases" `
+  -v "${PWD}\input.dat:/app/input.dat" `
   cfd-pipeline `
-  --sweep ./input.dat
+  --sweep /app/input.dat
 ```
 
 Post-process a result on Windows PowerShell:
@@ -353,35 +354,7 @@ docker run --rm `
 
 The volume mount keeps generated case files and result logs on the host machine.
 
-On Linux, macOS, or WSL, pass the host user ID so generated files are owned by the current user:
-
-```bash
-docker run --rm \
-  --user "$(id -u):$(id -g)" \
-  -v "$PWD/cases:/app/cases" \
-  cfd-pipeline \
-  --single --pressure 101325 --temperature 288.15 --mach 0.85
-```
-
-For a sweep:
-
-```bash
-docker run --rm \
-  --user "$(id -u):$(id -g)" \
-  -v "$PWD/cases:/app/cases" \
-  cfd-pipeline \
-  --sweep ./input.dat
-```
-
-For post-processing:
-
-```bash
-docker run --rm \
-  --user "$(id -u):$(id -g)" \
-  -v "$PWD/cases:/app/cases" \
-  cfd-pipeline \
-  --postprocess result_case_m0.85_p101325_t288.15.log
-```
+On Linux, macOS, or WSL, `chown` the cases/dir to the numeric 13337 user.
 
 ## Using a different solver executable with Docker
 
@@ -403,9 +376,10 @@ For a sweep on Windows PowerShell:
 ```powershell
 docker run --rm `
   -v "${PWD}\cases:/app/cases" `
+  -v "${PWD}\input.dat:/app/input.dat:ro" `
   -v "${PWD}\my_solver\jet3D:/solver/jet3D:ro" `
   cfd-pipeline `
-  --sweep ./input.dat `
+  --sweep /app/input.dat `
   --solver /solver/jet3D
 ```
 
@@ -427,9 +401,10 @@ For a sweep:
 docker run --rm \
   --user "$(id -u):$(id -g)" \
   -v "$PWD/cases:/app/cases" \
+  -v "${PWD}\input.dat:/app/input.dat:ro" \
   -v "$PWD/my_solver/jet3D:/solver/jet3D:ro" \
   cfd-pipeline \
-  --sweep ./input.dat \
+  --sweep /app/input.dat \
   --solver /solver/jet3D
 ```
 
