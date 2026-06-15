@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 
 from cfd_pipeline.logging_config import configure_logging
-from cfd_pipeline.models import SimulationCase
+from cfd_pipeline.models import SimulationCase, SimulationStatus
 from cfd_pipeline.orchestrator import postprocess_result, run_single, run_sweep
 
 
@@ -52,6 +52,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="./bin/jet3D",
         help="Path to the jet3D solver executable",
     )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable the progress bar for sweep runs.",
+    )
 
     return parser
 
@@ -83,17 +88,19 @@ def main() -> int:
             mach=args.mach,
         )
 
-        return run_single(
+        result = run_single(
             case=case,
             case_dir=case_dir,
             solver_path=solver_path,
         )
+        return 0 if result.status == SimulationStatus.SUCCESS else 1
 
     if args.sweep:
         return run_sweep(
             sweep_path=Path(args.sweep),
             case_dir=case_dir,
             solver_path=solver_path,
+            show_progress=not args.no_progress,
         )
 
     if args.postprocess:

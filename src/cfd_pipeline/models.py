@@ -46,6 +46,7 @@ class SimulationStatus(str, Enum):
     SUCCESS = "success"
     FAILED = "failed"
     TIMEOUT = "timeout"
+    INVALID_OUTPUT = "invalid_output"
 
 
 @dataclass(frozen=True)

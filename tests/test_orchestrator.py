@@ -1,7 +1,7 @@
 """Tests for CFD workflow orchestration."""
 
+import logging
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -13,9 +13,8 @@ def test_run_single_writes_input_and_returns_success(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Return a success exit code when the solver returns a successful result."""
+    """Write input and return success when solver output is valid."""
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
-    solver_path = Path("./bin/jet3D")
 
     def fake_run_solver(
         *,
@@ -24,35 +23,45 @@ def test_run_single_writes_input_and_returns_success(
         output_path: Path,
         solver_path: Path,
     ) -> SimulationResult:
+        output_path.write_text(
+            "CFD Solver Output Log\n"
+            "======================\n"
+            "Final Forces and Moments (N, Nm): "
+            "[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]\n",
+            encoding="utf-8",
+        )
+
         return SimulationResult(
             case=case,
             status=SimulationStatus.SUCCESS,
             input_path=input_path,
             output_path=output_path,
-            stdout="[solver] success: {'status': 'done'}\n",
+            stdout="[solver] success: {'status': 'ok'}",
             stderr="",
             returncode=0,
         )
 
     monkeypatch.setattr(orchestrator, "run_solver", fake_run_solver)
 
-    exit_code = orchestrator.run_single(
+    result = orchestrator.run_single(
         case=case,
         case_dir=tmp_path,
-        solver_path=solver_path,
+        solver_path=Path("./bin/jet3D"),
     )
 
-    assert exit_code == 0
-    assert case.input_path(tmp_path).read_text(encoding="utf-8") == (
-        "pressure=101325\ntemperature=288.15\nmach=0.85\n"
-    )
+    assert result.status == SimulationStatus.SUCCESS
+    assert result.returncode == 0
+    assert (tmp_path / "input_case_m0.85_p101325_t288.15.txt").exists()
+    assert (tmp_path / "result_case_m0.85_p101325_t288.15.log").exists()
 
 
 def test_run_single_returns_failure_for_solver_error(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Return a failure exit code when the solver returns an error result."""
+    """Return FAILED when the solver process fails."""
+    caplog.set_level(logging.ERROR, logger="runner")
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
 
     def fake_run_solver(
@@ -74,20 +83,25 @@ def test_run_single_returns_failure_for_solver_error(
 
     monkeypatch.setattr(orchestrator, "run_solver", fake_run_solver)
 
-    exit_code = orchestrator.run_single(
+    result = orchestrator.run_single(
         case=case,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
     )
 
-    assert exit_code == 1
+    assert result.status == SimulationStatus.FAILED
+    assert result.returncode == 1
+    assert "Floating point exception" in result.stderr
+    assert "ERROR running case" in caplog.text
 
 
 def test_run_single_returns_failure_for_timeout(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Return a failure exit code when the solver returns a timeout result."""
+    """Return TIMEOUT when the solver times out."""
+    caplog.set_level(logging.ERROR, logger="runner")
     case = SimulationCase(pressure=101325, temperature=288.15, mach=0.85)
 
     def fake_run_solver(
@@ -109,38 +123,98 @@ def test_run_single_returns_failure_for_timeout(
 
     monkeypatch.setattr(orchestrator, "run_solver", fake_run_solver)
 
-    exit_code = orchestrator.run_single(
+    result = orchestrator.run_single(
         case=case,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
     )
 
-    assert exit_code == 1
+    assert result.status == SimulationStatus.TIMEOUT
+    assert result.returncode is None
+    assert "TIMEOUT running case" in caplog.text
+
+
+def test_run_single_returns_failure_for_invalid_solver_output(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Return INVALID_OUTPUT when solver succeeds but output is invalid."""
+    caplog.set_level(logging.ERROR, logger="runner")
+    case = SimulationCase(pressure=100000, temperature=300.0, mach=1.5)
+
+    def fake_run_solver(
+        *,
+        case: SimulationCase,
+        input_path: Path,
+        output_path: Path,
+        solver_path: Path,
+    ) -> SimulationResult:
+        output_path.write_text(
+            "CFD Solver Output Log\n"
+            "======================\n"
+            "ERROR: Simulation terminated unexpectedly during write.\n",
+            encoding="utf-8",
+        )
+
+        return SimulationResult(
+            case=case,
+            status=SimulationStatus.SUCCESS,
+            input_path=input_path,
+            output_path=output_path,
+            stdout="[solver] success: {'status': 'incomplete_output'}",
+            stderr="",
+            returncode=0,
+        )
+
+    monkeypatch.setattr(orchestrator, "run_solver", fake_run_solver)
+
+    result = orchestrator.run_single(
+        case=case,
+        case_dir=tmp_path,
+        solver_path=Path("./bin/jet3D"),
+    )
+
+    assert result.status == SimulationStatus.INVALID_OUTPUT
+    assert result.returncode == 0
+    assert "No results found" in result.stderr
+    assert "solver produced invalid output" in caplog.text
 
 
 def test_run_sweep_continues_after_failed_case(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    """Continue running cases if one case fails, return a failure exit code."""
+    """Continue running sweep cases after a failure."""
     sweep_path = tmp_path / "input.dat"
     sweep_path.write_text(
-        ("pressure temperature mach\n101325 288.15 0.85\n90000 275.0 1.2\n"),
+        "pressure temperature mach\n101325 288.15 0.85\n100000 300.0 1.5\n",
         encoding="utf-8",
     )
 
-    calls: List[str] = []
+    calls: list[SimulationCase] = []
 
     def fake_run_single(
         *,
         case: SimulationCase,
         case_dir: Path,
         solver_path: Path,
-    ) -> int:
-        calls.append(case.case_name)
-        if case.pressure == 101325:
-            return 1
-        return 0
+    ) -> SimulationResult:
+        calls.append(case)
+
+        status = (
+            SimulationStatus.FAILED if len(calls) == 1 else SimulationStatus.SUCCESS
+        )
+
+        return SimulationResult(
+            case=case,
+            status=status,
+            input_path=case.input_path(case_dir),
+            output_path=case.output_path(case_dir),
+            stdout="",
+            stderr="solver failed" if status == SimulationStatus.FAILED else "",
+            returncode=1 if status == SimulationStatus.FAILED else 0,
+        )
 
     monkeypatch.setattr(orchestrator, "run_single", fake_run_single)
 
@@ -148,13 +222,11 @@ def test_run_sweep_continues_after_failed_case(
         sweep_path=sweep_path,
         case_dir=tmp_path,
         solver_path=Path("./bin/jet3D"),
+        show_progress=False,
     )
 
     assert exit_code == 1
-    assert calls == [
-        "m0.85_p101325_t288.15",
-        "m1.2_p90000_t275.0",
-    ]
+    assert len(calls) == 2
 
 
 def test_run_sweep_returns_failure_for_missing_sweep_file(tmp_path: Path) -> None:

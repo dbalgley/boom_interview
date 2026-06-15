@@ -28,28 +28,25 @@ def test_parse_forces_moments_line_returns_values() -> None:
     )
 
 
-def test_parse_forces_moments_line_rejects_non_result_line() -> None:
-    """Raise an error if the line does not contain result data."""
+def test_parse_forces_moments_line_rejects_wrong_value_count() -> None:
+    """Reject a result line with the wrong number of values."""
+    line = "Final Forces and Moments (N, Nm): [1, 2, 3]"
+
     with pytest.raises(
         InvalidResultFileError,
-        match="line does not contain final forces and moments",
+        match="expected 6 force/moment values, got 3",
     ):
-        parse_forces_moments_line("INFO: Step 1 converged")
-
-
-def test_parse_forces_moments_line_rejects_wrong_value_count() -> None:
-    """Raise an error if the result line does not contain exactly 6 values."""
-    line = "Final Forces and Moments (N, Nm): [1.0, 2.0, 3.0]"
-
-    with pytest.raises(InvalidResultFileError, match="expected 6 result values"):
         parse_forces_moments_line(line)
 
 
 def test_parse_forces_moments_line_rejects_non_numeric_values() -> None:
-    """Raise an error if the result values cannot be parsed as floats."""
-    line = "Final Forces and Moments (N, Nm): [1.0, 2.0, nope, 4.0, 5.0, 6.0]"
+    """Reject a result line with non-numeric values."""
+    line = "Final Forces and Moments (N, Nm): [1, 2, nope, 4, 5, 6]"
 
-    with pytest.raises(InvalidResultFileError, match="result values must be numeric"):
+    with pytest.raises(
+        InvalidResultFileError,
+        match="force/moment values must be numeric",
+    ):
         parse_forces_moments_line(line)
 
 
@@ -102,8 +99,41 @@ def test_parse_result_file_rejects_truncated_output(tmp_path: Path) -> None:
 
 
 def test_parse_result_file_rejects_missing_file(tmp_path: Path) -> None:
+    """Raise an error if the output file does not exist or cannot be read."""
     """Test that parse_result_file raises an error if the output file does not exist."""
     output_file = tmp_path / "missing.log"
 
     with pytest.raises(InvalidResultFileError, match="failed to read"):
         parse_result_file(output_file)
+
+
+def test_parse_forces_moments_line_rejects_missing_colon() -> None:
+    """Raise an error if the result line is missing the ':' separator."""
+    line = "Final Forces and Moments (N, Nm) [1, 2, 3, 4, 5, 6]"
+
+    with pytest.raises(InvalidResultFileError, match="missing ':' separator"):
+        parse_forces_moments_line(line)
+
+
+def test_parse_forces_moments_line_rejects_missing_brackets() -> None:
+    """Raise and error if the result line is missing brackets around the values."""
+    line = "Final Forces and Moments (N, Nm): 1, 2, 3, 4, 5, 6"
+
+    with pytest.raises(InvalidResultFileError, match="missing bracketed values"):
+        parse_forces_moments_line(line)
+
+
+def test_parse_forces_moments_line_rejects_extra_values() -> None:
+    """Raise an error if the result line contains more than 6 values."""
+    line = "Final Forces and Moments (N, Nm): [1, 2, 3, 4, 5, 6, 7]"
+
+    with pytest.raises(InvalidResultFileError, match="expected 6"):
+        parse_forces_moments_line(line)
+
+
+def test_parse_forces_moments_line_rejects_non_numeric_value() -> None:
+    """Raise and error if values cannot be parsed as floats."""
+    line = "Final Forces and Moments (N, Nm): [1, 2, nope, 4, 5, 6]"
+
+    with pytest.raises(InvalidResultFileError, match="must be numeric"):
+        parse_forces_moments_line(line)
