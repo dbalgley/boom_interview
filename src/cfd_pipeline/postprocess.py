@@ -1,57 +1,88 @@
 """Postprocessing helpers for jet3D result files."""
 
+import re
 from pathlib import Path
 
 from cfd_pipeline.models import ForcesMoments
 
+RESULT_LINE_RE = re.compile(
+    r"""
+    ^\s*
+    Final\s+Forces\s+and\s+Moments
+    (?:\s*\(.*?\))?
+    \s*:\s*
+    \[
+        (?P<values>[^\]]+)
+    \]
+    \s*$
+    """,
+    re.VERBOSE,
+)
 
-class InvalidResultFileError(Exception):
-    """Raised when a jet3D output file does not contain valid result data."""
+
+class InvalidResultFileError(ValueError):
+    """Raised when a solver result file cannot be parsed."""
 
 
 def parse_forces_moments_line(line: str) -> ForcesMoments:
-    """Parse a jet3D forces/moments result line."""
-    marker = "Final Forces and Moments"
+    """
+    Parse a solver result line into forces and moments.
 
-    if marker not in line:
-        raise InvalidResultFileError("line does not contain final forces and moments")
+    :param line: A solver line output that should contain forces and moments.
+    :return: A ForcesMoments object with the parsed values.
+    :raises InvalidResultFileError: If the line cannot be parsed as expected.
+    """
+    match = RESULT_LINE_RE.match(line)
 
-    parts = line.strip().split(":", maxsplit=1)
-    if len(parts) != 2:
-        raise InvalidResultFileError("result line is missing ':' separator")
+    if match is None:
+        if "Final Forces and Moments" not in line:
+            raise InvalidResultFileError(
+                "result line does not contain 'Final Forces and Moments'"
+            )
 
-    values = parts[1].strip(" []").split(",")
-    if len(values) != 6:
-        raise InvalidResultFileError(f"expected 6 result values, got {len(values)}")
+        if ":" not in line:
+            raise InvalidResultFileError("result line is missing ':' separator")
+
+        if "[" not in line or "]" not in line:
+            raise InvalidResultFileError("result line is missing bracketed values")
+
+        raise InvalidResultFileError("result line does not match expected format")
+
+    raw_values = [value.strip() for value in match.group("values").split(",")]
+
+    if len(raw_values) != 6:
+        raise InvalidResultFileError(
+            f"expected 6 force/moment values, got {len(raw_values)}"
+        )
 
     try:
-        fx, fy, fz, mx, my, mz = (float(value) for value in values)
+        values = [float(value) for value in raw_values]
     except ValueError as exc:
-        raise InvalidResultFileError("result values must be numeric") from exc
+        raise InvalidResultFileError("force/moment values must be numeric") from exc
 
     return ForcesMoments(
-        fx=fx,
-        fy=fy,
-        fz=fz,
-        mx=mx,
-        my=my,
-        mz=mz,
+        fx=values[0],
+        fy=values[1],
+        fz=values[2],
+        mx=values[3],
+        my=values[4],
+        mz=values[5],
     )
 
 
 def parse_result_file(output_file: Path) -> ForcesMoments:
-    """Parse final forces and moments from a jet3D output file."""
+    """Parse a solver output file."""
     try:
         lines = output_file.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
-        raise InvalidResultFileError(f"failed to read {output_file}: {exc}") from exc
+        raise InvalidResultFileError(
+            f"failed to read result file {output_file}: {exc}"
+        ) from exc
 
     for line in lines:
-        if "Final Forces and Moments" not in line:
-            continue
-
-        return parse_forces_moments_line(line)
+        if "Final Forces and Moments" in line:
+            return parse_forces_moments_line(line)
 
     raise InvalidResultFileError(
-        f"No results found in {output_file} — file may be truncated or invalid."
+        f"No results found in {output_file}; file may be truncated or invalid."
     )

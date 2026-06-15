@@ -20,7 +20,8 @@ FROM base AS builder
 USER root
 
 RUN python -m venv "${VIRTUAL_ENV}" \
-    && "${VIRTUAL_ENV}/bin/python" -m pip install --upgrade pip setuptools wheel
+    && "${VIRTUAL_ENV}/bin/python" -m pip install --upgrade pip setuptools wheel \
+    && chown -R "${USER}:${USER}" "${VIRTUAL_ENV}"
 
 USER "${UID}:${UID}"
 

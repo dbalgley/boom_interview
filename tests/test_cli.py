@@ -1,12 +1,13 @@
 """Tests for the command-line interface."""
 
+import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import pytest
 
 import cfd_pipeline.cli as cli
-from cfd_pipeline.models import SimulationCase
+from cfd_pipeline.models import SimulationCase, SimulationResult, SimulationStatus
 
 
 def test_main_returns_error_when_no_action(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -33,23 +34,36 @@ def test_main_returns_error_when_single_missing_required_args(
 
 
 def test_main_routes_single_run(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
 ) -> None:
-    """Test correct arguments when --single is specified with required parameters."""
-    calls: List[Tuple[int, float, float, Path]] = []
+    """Route --single arguments to run_single."""
+    captured: dict[str, Any] = {}
 
     def fake_run_single(
         *,
         case: SimulationCase,
         case_dir: Path,
         solver_path: Path,
-    ) -> int:
-        calls.append((case.pressure, case.temperature, case.mach, case_dir))
-        return 0
+    ) -> SimulationResult:
+        captured["case"] = case
+        captured["case_dir"] = case_dir
+        captured["solver_path"] = solver_path
+
+        return SimulationResult(
+            case=case,
+            status=SimulationStatus.SUCCESS,
+            input_path=case.input_path(case_dir),
+            output_path=case.output_path(case_dir),
+            stdout="",
+            stderr="",
+            returncode=0,
+        )
 
     monkeypatch.setattr(cli, "run_single", fake_run_single)
     monkeypatch.setattr(
-        "sys.argv",
+        sys,
+        "argv",
         [
             "runner.py",
             "--dir",
@@ -64,17 +78,27 @@ def test_main_routes_single_run(
         ],
     )
 
-    exit_code = cli.main()
+    assert cli.main() == 0
 
-    assert exit_code == 0
-    assert calls == [(101325, 288.15, 0.85, tmp_path)]
+    assert captured["case"] == SimulationCase(
+        pressure=101325,
+        temperature=288.15,
+        mach=0.85,
+    )
+    assert captured["case_dir"] == tmp_path
 
 
 def test_main_routes_sweep(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Test correct arguments when --sweep is specified."""
     calls: List[Tuple[Path, Path]] = []
 
-    def fake_run_sweep(*, sweep_path: Path, case_dir: Path, solver_path: Path) -> int:
+    def fake_run_sweep(
+        *,
+        sweep_path: Path,
+        case_dir: Path,
+        solver_path: Path,
+        show_progress: bool = False,
+    ) -> int:
         """Fake run_sweep that captures the arguments it was called with."""
         calls.append((sweep_path, case_dir))
         return 0
