@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "software-interview-cfd-workflow"
-version = "0.1.0"
+version = "1.0.2"
 description = "A CFD Workflow."
 authors = [
     { name = "Davis Balgley", email = "davis.balgley@gmail.com" }

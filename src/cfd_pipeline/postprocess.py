@@ -29,7 +29,9 @@ def parse_forces_moments_line(line: str) -> ForcesMoments:
     Parse a solver result line into forces and moments.
 
     :param line: A solver line output that should contain forces and moments.
-    :return: A ForcesMoments object with the parsed values.
+    :type line: str
+    :returns: Parsed forces and moments values.
+    :rtype: ForcesMoments
     :raises InvalidResultFileError: If the line cannot be parsed as expected.
     """
     match = RESULT_LINE_RE.match(line)
@@ -71,7 +73,14 @@ def parse_forces_moments_line(line: str) -> ForcesMoments:
 
 
 def parse_result_file(output_file: Path) -> ForcesMoments:
-    """Parse a solver output file."""
+    """Parse a solver output file.
+
+    :param output_file: Path to the solver output file.
+    :type output_file: Path
+    :returns: Parsed forces and moments values.
+    :rtype: ForcesMoments
+    :raises InvalidResultFileError: If the file cannot be read or parsed.
+    """
     try:
         lines = output_file.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
