@@ -3,7 +3,12 @@
 import subprocess
 from pathlib import Path
 
-from cfd_pipeline.models import SimulationCase, SimulationResult, SimulationStatus
+from cfd_pipeline.models import (
+    DEFAULT_SOLVER_TIMEOUT_SECONDS,
+    SimulationCase,
+    SimulationResult,
+    SimulationStatus,
+)
 
 
 def run_solver(
@@ -11,7 +16,7 @@ def run_solver(
     input_path: Path,
     output_path: Path,
     solver_path: Path,
-    timeout_seconds: int = 60,
+    timeout_seconds: int = DEFAULT_SOLVER_TIMEOUT_SECONDS,
 ) -> SimulationResult:
     """Run the jet3D solver for one simulation case."""
     try:

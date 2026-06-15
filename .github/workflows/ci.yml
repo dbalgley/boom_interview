@@ -144,8 +144,8 @@ jobs:
           file: ./Dockerfile
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/jet3d-workflow:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/jet3d-workflow:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/cfd-pipeline:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/cfd-pipeline:${{ github.sha }}
 
   dependency-audit:
     name: Dependency audit

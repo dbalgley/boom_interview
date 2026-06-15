@@ -33,6 +33,7 @@ def test_run_solver_returns_success_result(monkeypatch: Any, tmp_path: Path) -> 
         input_path=input_path,
         output_path=output_path,
         solver_path=solver_path,
+        timeout_seconds=60,
     )
 
     assert result.status == SimulationStatus.SUCCESS
@@ -68,6 +69,7 @@ def test_run_solver_returns_failed_result_for_nonzero_exit(
         input_path=input_path,
         output_path=output_path,
         solver_path=solver_path,
+        timeout_seconds=60,
     )
 
     assert result.status == SimulationStatus.FAILED

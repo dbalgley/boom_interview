@@ -2,11 +2,21 @@
 
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 from cfd_pipeline.logging_config import configure_logging
-from cfd_pipeline.models import SimulationCase, SimulationStatus
+from cfd_pipeline.models import (
+    DEFAULT_SOLVER_TIMEOUT_SECONDS,
+    SimulationCase,
+    SimulationStatus,
+)
 from cfd_pipeline.orchestrator import postprocess_result, run_single, run_sweep
+
+
+def should_use_progress(*, no_progress: bool) -> bool:
+    """Return whether an interactive progress display should be used."""
+    return not no_progress and sys.stderr.isatty()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -57,17 +67,32 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable the progress bar for sweep runs.",
     )
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=DEFAULT_SOLVER_TIMEOUT_SECONDS,
+        help=(
+            "Maximum seconds to allow each solver run before marking it as "
+            f"timed out. Default: {DEFAULT_SOLVER_TIMEOUT_SECONDS}."
+        ),
+    )
 
     return parser
 
 
 def main() -> int:
     """Run the CFD workflow command-line interface."""
-    configure_logging()
-    logger = logging.getLogger("runner")
-
     parser = build_parser()
     args = parser.parse_args()
+
+    progress_enabled = should_use_progress(no_progress=args.no_progress)
+
+    configure_logging(use_tqdm=progress_enabled)
+    logger = logging.getLogger("runner")
+
+    if args.timeout <= 0:
+        logger.error("ERROR: --timeout must be greater than 0")
+        return 1
 
     case_dir = Path(args.dir)
     case_dir.mkdir(parents=True, exist_ok=True)
@@ -92,6 +117,7 @@ def main() -> int:
             case=case,
             case_dir=case_dir,
             solver_path=solver_path,
+            timeout_seconds=args.timeout,
         )
         return 0 if result.status == SimulationStatus.SUCCESS else 1
 
@@ -100,7 +126,8 @@ def main() -> int:
             sweep_path=Path(args.sweep),
             case_dir=case_dir,
             solver_path=solver_path,
-            show_progress=not args.no_progress,
+            timeout_seconds=args.timeout,
+            show_progress=progress_enabled,
         )
 
     if args.postprocess:
