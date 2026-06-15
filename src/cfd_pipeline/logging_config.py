@@ -10,7 +10,12 @@ class TqdmLoggingHandler(logging.StreamHandler):  # type: ignore
     """Logging handler that writes cleanly above an active tqdm progress bar."""
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Emit a log record, writing above the tqdm progress bar if active."""
+        """Emit a log record, writing above the tqdm progress bar if active.
+
+        :param record: The log record to emit.
+        :type record: logging.LogRecord
+        :returns: None
+        """
         try:
             message = self.format(record)
             tqdm.write(message)
@@ -20,7 +25,12 @@ class TqdmLoggingHandler(logging.StreamHandler):  # type: ignore
 
 
 def configure_logging(*, use_tqdm: bool = False) -> None:
-    """Configure application logging."""
+    """Configure application logging.
+
+    :param use_tqdm: If True, configure logging to work with tqdm progress bars.
+    :type use_tqdm: bool
+    :returns: None
+    """
     handler: logging.Handler
 
     if use_tqdm:

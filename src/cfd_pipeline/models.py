@@ -18,15 +18,31 @@ class SimulationCase:
 
     @property
     def case_name(self) -> str:
-        """Stable case identifier used for input and output filenames."""
+        """Stable case identifier used for input and output filenames.
+
+        :returns: Deterministic case identifier string.
+        :rtype: str
+        """
         return f"m{self.mach}_p{self.pressure}_t{self.temperature}"
 
     def input_path(self, case_dir: Path) -> Path:
-        """Return the input file path for this case."""
+        """Return the input file path for this case.
+
+        :param case_dir: Root directory for case files.
+        :type case_dir: Path
+        :returns: Full path to the input file for this case.
+        :rtype: Path
+        """
         return case_dir / f"input_case_{self.case_name}.txt"
 
     def output_path(self, case_dir: Path) -> Path:
-        """Return the output file path for this case."""
+        """Return the output file path for this case.
+
+        :param case_dir: Root directory for case files.
+        :type case_dir: Path
+        :returns: Full path to the output file for this case.
+        :rtype: Path
+        """
         return case_dir / f"result_case_{self.case_name}.log"
 
 

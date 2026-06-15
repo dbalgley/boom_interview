@@ -15,12 +15,22 @@ from cfd_pipeline.orchestrator import postprocess_result, run_single, run_sweep
 
 
 def should_use_progress(*, no_progress: bool) -> bool:
-    """Return whether an interactive progress display should be used."""
+    """Return whether an interactive progress display should be used.
+
+    :param no_progress: If True, disable the progress display.
+    :type no_progress: bool
+    :returns: True if progress display should be used, otherwise False.
+    :rtype: bool
+    """
     return not no_progress and sys.stderr.isatty()
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build the command-line argument parser."""
+    """Build the command-line argument parser.
+
+    :returns: An argument parser configured for the CFD workflow CLI.
+    :rtype: argparse.ArgumentParser
+    """
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -81,7 +91,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    """Run the CFD workflow command-line interface."""
+    """Run the CFD workflow command-line interface.
+
+    :returns: Process exit code: 0 on success, non-zero on error.
+    :rtype: int
+    """
     parser = build_parser()
     args = parser.parse_args()
 

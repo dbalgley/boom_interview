@@ -19,7 +19,14 @@ solver_stderr_logger = logging.getLogger("solver.stderr")
 
 
 def _log_process_streams(stdout: Union[bytes, str], stderr: Union[bytes, str]) -> None:
-    """Forward solver output without modifying solver-emitted text."""
+    """Forward solver output without modifying solver-emitted text.
+
+    :param stdout: Captured standard output from the solver.
+    :type stdout: bytes | str
+    :param stderr: Captured standard error from the solver.
+    :type stderr: bytes | str
+    :returns: None
+    """
     for line in stdout.splitlines():
         solver_stdout_logger.info("%s", line)
 
@@ -34,7 +41,19 @@ def run_single(
     solver_path: Path,
     timeout_seconds: int,
 ) -> SimulationResult:
-    """Run one simulation case and return its workflow result."""
+    """Run one simulation case and return its workflow result.
+
+    :param case: Simulation case to run.
+    :type case: SimulationCase
+    :param case_dir: Directory for input and output files.
+    :type case_dir: Path
+    :param solver_path: Path to the solver executable.
+    :type solver_path: Path
+    :param timeout_seconds: Maximum allowed time per solver run in seconds.
+    :type timeout_seconds: int
+    :returns: Execution result for the case.
+    :rtype: SimulationResult
+    """
     input_path = case.input_path(case_dir)
     output_path = case.output_path(case_dir)
 
@@ -102,7 +121,21 @@ def run_sweep(
     timeout_seconds: int,
     show_progress: bool = True,
 ) -> int:
-    """Run a sweep of simulation cases."""
+    """Run a sweep of simulation cases.
+
+    :param sweep_path: Path to the sweep input file.
+    :type sweep_path: Path
+    :param case_dir: Directory for input and output files.
+    :type case_dir: Path
+    :param solver_path: Path to the solver executable.
+    :type solver_path: Path
+    :param timeout_seconds: Maximum allowed time per solver run in seconds.
+    :type timeout_seconds: int
+    :param show_progress: If True, display a progress bar.
+    :type show_progress: bool
+    :returns: Process exit code: 0 if all cases succeed, otherwise 1.
+    :rtype: int
+    """
     try:
         cases = read_sweep_file(sweep_path)
     except OSError:
@@ -161,7 +194,13 @@ def run_sweep(
 
 
 def postprocess_result(output_file: Path) -> int:
-    """Postprocess one result file and log parsed values."""
+    """Postprocess one result file and log parsed values.
+
+    :param output_file: Path to the solver result file to parse.
+    :type output_file: Path
+    :returns: Process exit code: 0 on success, 1 on error.
+    :rtype: int
+    """
     if not output_file.exists():
         postprocess_logger.error("File not found: %s", output_file)
         return 1

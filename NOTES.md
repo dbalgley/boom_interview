@@ -46,6 +46,8 @@ cfd-pipeline --postprocess result_case_m0.85_p101325_t288.15.log
 ```
 The implementation changed, but the basic user workflow did not.
 
+A small aside, I wrote the refactor to be compatible with a Python3.8 environment as that was what was defined originally. In order to further reduce difficult for the engineering team, they can continue to use their installed environment with this new refactor. However, I build the Docker image at Python3.11 and do future checking for Python3.12 in the CI pipeline. This brings the Python version to a more modern iteration while allowing for legacy and future functionality.
+
 ### Treating `jet3D` as a Black Box
 
 I did not modify `bin/jet3D`. I treated it as an external solver executable behind a small adapter layer in `solver.py`. The orchestration layer is responsible for creating input files, invoking the solver, capturing stdout/stderr, enforcing timeouts, and validating the output artifact. This keeps the Python workflow independent of solver internals and makes it easier to replace or relocate the solver later.
